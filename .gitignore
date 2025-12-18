@@ -34,3 +34,7 @@ build/
 
 *.mp3
 *.wav
+
+.DS_Store
+**/.DS_Store
+
