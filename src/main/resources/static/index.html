@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Audio Cartographer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="font-family: system-ui; max-width: 900px; margin: 30px auto;">
+<h1>🎧 Audio Cartographer</h1>
+
+<input type="file" id="audioFile" accept=".mp3,.wav" />
+<button id="btn">Analyze</button>
+<button id="clearBtn" type="button">Clear</button>
+
+<div id="status" style="margin-top: 12px;"></div>
+
+<div id="results" style="display:none; margin-top: 20px;">
+    <p><b>File:</b> <span id="fname"></span></p>
+    <p><b>Duration (s):</b> <span id="dur"></span></p>
+    <p><b>Average RMS:</b> <span id="rms"></span></p>
+
+    <h3>Energy over time</h3>
+    <canvas id="energyChart" height="120"></canvas>
+</div>
+
+<script>
+    let chart;
+
+    document.getElementById('btn').addEventListener('click', analyze);
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+
+    async function analyze() {
+        const file = document.getElementById('audioFile').files[0];
+        if (!file) {
+            setStatus('Please choose a .mp3 or .wav file.');
+            return;
+        }
+
+        setStatus('Uploading & analyzing...');
+        document.getElementById('results').style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+        if (!res.ok) {
+            const text = await res.text();
+            setStatus('Error: ' + text);
+            return;
+        }
+
+        const data = await res.json();
+        render(data);
+        setStatus('Done ✅');
+    }
+
+    function render(data) {
+        document.getElementById('fname').textContent = data.filename;
+        document.getElementById('dur').textContent = (data.durationSeconds ?? 0).toFixed(2);
+        document.getElementById('rms').textContent = (data.averageRms ?? 0).toFixed(5);
+
+        const seg = data.energySegments || [];
+        const labels = seg.map((_, i) => `t${i}`);
+
+        const ctx = document.getElementById('energyChart').getContext('2d');
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'RMS (energy)',
+                    data: seg,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } },
+                scales: { x: { display: true }, y: { display: true } }
+            }
+        });
+
+        document.getElementById('results').style.display = 'block';
+    }
+
+    function setStatus(msg) {
+        document.getElementById('status').textContent = msg;
+    }
+
+    function clearAll() {
+        // clear file
+        const input = document.getElementById('audioFile');
+        input.value = '';
+
+        // hide results
+        document.getElementById('results').style.display = 'none';
+
+        // clear text area
+        document.getElementById('fname').textContent = '';
+        document.getElementById('dur').textContent = '';
+        document.getElementById('rms').textContent = '';
+
+        // clear status
+        setStatus('');
+
+        // delete the chart
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+    }
+    // auto clean when piking a new file
+    document.getElementById('audioFile').addEventListener('change', () => {
+        if (chart) { chart.destroy(); chart = null; }
+        document.getElementById('results').style.display = 'none';
+        setStatus('');
+    });
+
+
+</script>
+</body>
+</html>

@@ -23,6 +23,14 @@
 		<lombok.version>1.18.36</lombok.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>tarsosdsp-0110</id>
+			<url>https://mvn.0110.be/releases/</url>
+		</repository>
+	</repositories>
+
+
 	<dependencies>
 		<!-- Web (REST API) -->
 		<dependency>
@@ -57,7 +65,31 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Позже добавим TarsosDSP и mp3spi (когда Maven станет зелёным) -->
+		<!-- TarsosDSP for audio analysis -->
+		<dependency>
+			<groupId>be.tarsos.dsp</groupId>
+			<artifactId>core</artifactId>
+			<version>2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>be.tarsos.dsp</groupId>
+			<artifactId>jvm</artifactId>
+			<version>2.5</version>
+		</dependency>
+
+		<!-- MP3 support for JavaSound (enables AudioSystem to read MP3) -->
+		<dependency>
+			<groupId>com.googlecode.soundlibs</groupId>
+			<artifactId>mp3spi</artifactId>
+			<version>1.9.5.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.soundlibs</groupId>
+			<artifactId>tritonus-share</artifactId>
+			<version>0.3.7.4</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
